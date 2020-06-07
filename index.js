@@ -6,14 +6,26 @@ module.exports = app => {
   // Your code here
   app.log('Yay, the app was loaded!')
 
-  app.on('issues.opened', async context => {
-    const issueComment = context.issue({ body: 'Thanks for opening this issue!' })
-    return context.github.issues.createComment(issueComment)
+  // app.on('issues.opened', async context => {
+  //   const issueComment = context.issue({
+  //     body: 'Make sure to include the following:\n' +
+  //       '- [ ] What is the purpose of this PR?\n' +
+  //       '- [ ] Attach the PR with the issue'
+  //   })
+  //   return context.github.issues.createComment(issueComment)
+  // })
+
+  app.on('pull_request.opened', async context => {
+    app.log('pull request was recieved')
+    const issue = context.issue()
+    issue.labels = ['automerge']
+    issue.issue_number = issue.number
+    const issueComment = context.issue({
+      body: 'Make sure to include the following:\n' +
+        '- [ ] What is the purpose of this PR?\n' +
+        '- [ ] Attach the PR with the issue'
+    })
+    await context.github.issues.createComment(issueComment)
+    return context.github.issues.addLabels(issue)
   })
-
-  // For more information on building apps:
-  // https://probot.github.io/docs/
-
-  // To get your app running against GitHub, see:
-  // https://probot.github.io/docs/development/
 }
